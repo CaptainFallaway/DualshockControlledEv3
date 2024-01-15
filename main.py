@@ -1,80 +1,71 @@
 import _thread
 from Dualshock import DeviceEventStream, constants, Event
 from ev3dev2.motor import OUTPUT_A, OUTPUT_D, MoveTank, SpeedPercent, MoveSteering, Motor
-
-from time import perf_counter
-
-
-class State:
-    def __init__(self, start_value: int) -> None:
-        self.lock = _thread.allocate_lock()
-        self.val = start_value
-
-    def set(self, value):
-        with self.lock:
-            self.val = value
+from ev3dev2.led import Leds, Led
+from helpers.component import ComponentThreadClass
 
 
-class MotorController:
-    def __init__(self, work_list: list) -> None:
+
+class MotorController(ComponentThreadClass):
+    def __init__(self) -> None:
         self.tank = MoveTank(OUTPUT_A, OUTPUT_D)
-        self.current_speed = State(0)
-        self.work = work_list
+        self.current_speed = 0
+
+    def set_speed(self, value: int) -> None:
+        self.current_speed = (value / 255) * 100
 
     def main_loop(self):
         while True:
-            if len(self.work) == 0:
-                continue
-
-            event = self.work.pop(0)
-
-            value = (event.value / 255) * 100
-
-            self.tank.on(SpeedPercent(value), SpeedPercent(value))
-
-    def start_loop_thread(self) -> None:
-        _thread.start_new_thread(self.main_loop, ())
+            self.tank.on(SpeedPercent(self.current_speed), SpeedPercent(self.current_speed))
 
 
+class LedController(ComponentThreadClass):
+    def __init__(self) -> None:
+        self.led = Leds()
+        self.state = False
+
+    def set_led_color(self) -> None:
+        self.state = not self.state
+
+    def main_loop(self):    
+        while True:
+            if self.state:
+                self.led.set_color("LEFT", "GREEN")
+                self.led.set_color("RIGHT", "GREEN")
+            else:
+                self.led.set_color("LEFT", "RED")
+                self.led.set_color("RIGHT", "RED")
+   
+    
 class Main:
     def __init__(self) -> None:
-        self.controller = DeviceEventStream("/dev/input/event4")
+        self.controller = DeviceEventStream("/dev/input/event5")
 
-        # self.events = {
-        #     constants.R2_AXIS: self.on_r2_axis,
-        #     constants.L2_AXIS: self.on_l2_axis,
-        # }
-        self.work = []
+        self.events = {
+            constants.R2_AXIS: self.on_r2_axis,
+            constants.CROSS: self.on_cross,
+        }
 
-        self.motor_controller = MotorController(self.work)
+        self.motor_controller = MotorController()
+        self.led_controller = LedController()
+
+    def on_r2_axis(self, event: Event) -> None:
+        self.motor_controller.set_speed(event.value)
+
+    def on_cross(self, event: Event) -> None:
+        if event.value == 1:
+            self.led_controller.set_led_color()
+
+    def start(self) -> None:
         self.motor_controller.start_loop_thread()
-
-    def start_loop(self) -> None:
-        # Each event get allocated a new thread for "parallel" computation.
+        self.led_controller.start_loop_thread()
 
         for event in self.controller:
-            if event.type == constants.R2_AXIS:
-                self.work.append(event)
-
-
-# for event in controller:
-#     if event.type == constants.RIGHTJOY_Y:
-#         value = ((event.value * 2 - 255) / 255) * -100
-#         right_motor.on(SpeedPercent(value))
-    
-#     if event.type == constants.LEFTJOY_Y:
-#         value = ((event.value * 2 - 255) / 255) * -100
-#         left_motor.on(SpeedPercent(value))
-        
-
-#     # if event.type == constants.LEFTJOY_X:
-#     #     value = (event.value * 2 - 255) / 255
-#     #     value = round(value, 2)
-
-#     #     motor_controller.change_direction(value)
+            if event.type in self.events:
+                self.events[event.type](event)
 
 
 if __name__ == "__main__":
     main = Main()
     print("Running...")
-    main.start_loop()
+    main.start()
