@@ -39,7 +39,7 @@ class LedController(ComponentThreadClass):
     
 class Main:
     def __init__(self) -> None:
-        self.controller = DeviceEventStream("/dev/input/event5")
+        self.controller = DeviceEventStream("/dev/input/event4")
 
         self.events = {
             constants.R2_AXIS: self.on_r2_axis,
