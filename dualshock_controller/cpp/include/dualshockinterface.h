@@ -62,6 +62,8 @@ private:
 
     void loop();
 
+    void checkEventStream();
+
     void handleKeyEvent(EventData& event);
 
     void handleAxisEvent(EventData& event);

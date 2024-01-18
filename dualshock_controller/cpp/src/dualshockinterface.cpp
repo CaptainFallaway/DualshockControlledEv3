@@ -43,24 +43,24 @@ void DualshockInterface::stop() {
     }
 }
 
+void DualshockInterface::checkEventStream() {
+    if (eventStream.fail()) {
+        // No handling of thread since ctypes crashes the main thread if an exception is thrown
+        throw std::runtime_error("Event stream failed to read!\nSee if controller has disconnected or changed event stream path.");
+    }
+}
+
 void DualshockInterface::loop() {
     // The loop that runs in a separate thread
 
     eventStream.open(eventStreamPath, std::ios::in | std::ios::binary);
-
-    if (!eventStream.is_open() || eventStream.fail()) {
-        throw std::runtime_error("Event stream failed to open!\nSee if controller has disconnected or changed event stream path.");
-        return;
-    }
+    checkEventStream();
 
     // Initialize a EventData so it can be mutated in the loop
     EventData event;
 
     while (!stopRequested) {
-        if (eventStream.fail()) {
-            throw std::runtime_error("Event stream failed to read!\nSee if controller has disconnected or changed event stream path.");
-            return;
-        }
+        checkEventStream();
 
         eventStream.read(reinterpret_cast<char*>(&event), sizeof(EventData));
 
