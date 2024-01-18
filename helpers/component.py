@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from _thread import start_new_thread
 
-class ComponentThreadClass(ABC):
+class ThreadedComponentClass(ABC):
     """
     A abstract class for all components that should need a state to be set by the controller.
 
