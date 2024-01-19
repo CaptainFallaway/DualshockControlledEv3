@@ -18,9 +18,13 @@ class MotorController(ThreadedComponentClass):
 
             if any([r2 is None, l2 is None, left_joystick is None]):
                 continue
-
+            
             # The base value is 128 (the middle of the axis), so we multiply it by 0.78 to get the max value of 100. Then we subtract 100 to get the base value as 0.
             steering = (left_joystick.value * 0.78) - 100
+
+            # Deadzone
+            if steering < 6.2 and steering > -6.2:
+                steering = 0
 
             # Divide by 255 to get the max value of 1, then multiply by 100 to get the max value of 100.
             speed = ((r2.value / 255) * 100) - ((l2.value / 255) * 100)
@@ -33,15 +37,25 @@ class LedController(ThreadedComponentClass):
         super().__init__(controller_class)
 
         self.led = Leds()
+        self.led.set_color("LEFT", "GREEN")
+        self.led.set_color("RIGHT", "GREEN")
+
+        self.state = True
 
     def main_loop(self):    
         while self.run:
-            event = self.controller.get_btn_cross()
+            event = self.controller.get_btn_cross(True)
 
             if event is None:
                 continue
 
+            if event.value == 0:
+                continue
+
             if event.value == 1:
+                self.state = not self.state
+
+            if self.state:
                 self.led.set_color("LEFT", "GREEN")
                 self.led.set_color("RIGHT", "GREEN")
             else:
@@ -56,20 +70,31 @@ class Main:
         self.led_controller = LedController(self.controller)
 
     def start(self) -> None:
-        self.controller.start_listening()
-        self.motor_controller.start_loop_thread()
-        self.led_controller.start_loop_thread()
+        try:
+            self.controller.start_listening()
+            self.motor_controller.start_loop_thread()
+            self.led_controller.start_loop_thread()
 
-        while True:
-            event = self.controller.get_btn_ps()
+            while True:
+                event = self.controller.get_btn_ps()
 
-            if event is None:
-                continue
+                if event is None:
+                    continue
 
-            if event.value == 1:
-                self.motor_controller.stop_loop_thread()
-                self.led_controller.stop_loop_thread()
-                break
+                if event.value == 1:
+                    print("Stopping...")
+                    self.motor_controller.stop_loop_thread()
+                    self.led_controller.stop_loop_thread()
+                    break
+        except KeyboardInterrupt:
+            while True:
+                try:
+                    print("Stopping...")
+                    self.motor_controller.stop_loop_thread()
+                    self.led_controller.stop_loop_thread()
+                    break
+                except KeyboardInterrupt:
+                    continue
 
 
 if __name__ == "__main__":
