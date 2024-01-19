@@ -14,7 +14,7 @@ class ThreadedComponentClass(ABC):
     
     """
 
-    def __init__(self, controller_class: Any) -> None:
+    def __init__(self, controller_class: "DualshockInterface") -> None:
         self.controller = controller_class
         self.run = False
 
