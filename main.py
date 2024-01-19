@@ -1,35 +1,47 @@
-import _thread
-from Dualshock import DeviceEventStream, constants, Event
-from ev3dev2.motor import OUTPUT_A, OUTPUT_D, MoveTank, SpeedPercent, MoveSteering, Motor
 from ev3dev2.led import Leds, Led
-from helpers.component import ComponentThreadClass
+from helpers.component import ThreadedComponentClass
+from dualshock_controller import DualshockInterface, Event
+from ev3dev2.motor import OUTPUT_A, OUTPUT_D, SpeedPercent, MoveSteering, Motor
 
 
+class MotorController(ThreadedComponentClass):
+    def __init__(self, controller_class: DualshockInterface) -> None:
+        super().__init__(controller_class)
 
-class MotorController(ComponentThreadClass):
-    def __init__(self) -> None:
-        self.tank = MoveTank(OUTPUT_A, OUTPUT_D)
-        self.current_speed = 0
-
-    def set_speed(self, value: int) -> None:
-        self.current_speed = (value / 255) * 100
+        self.motor_controller = MoveSteering(OUTPUT_A, OUTPUT_D) 
 
     def main_loop(self):
-        while True:
-            self.tank.on(SpeedPercent(self.current_speed), SpeedPercent(self.current_speed))
+        while self.run:
+            r2 = self.controller.get_axis_r2()
+            l2 = self.controller.get_axis_l2()
+            left_joystick = self.controller.get_axis_left_stick_x()
+
+            if any([r2 is None, l2 is None, left_joystick is None]):
+                continue
+
+            # The base value is 128 (the middle of the axis), so we multiply it by 0.78 to get the max value of 100. Then we subtract 100 to get the base value as 0.
+            steering = (left_joystick.value * 0.78) - 100
+
+            # Divide by 255 to get the max value of 1, then multiply by 100 to get the max value of 100.
+            speed = ((r2.value / 255) * 100) - ((l2.value / 255) * 100)
+
+            self.motor_controller.on(steering, SpeedPercent(speed))
 
 
-class LedController(ComponentThreadClass):
-    def __init__(self) -> None:
+class LedController(ThreadedComponentClass):
+    def __init__(self, controller_class: DualshockInterface) -> None:
+        super().__init__(controller_class)
+
         self.led = Leds()
-        self.state = False
-
-    def set_led_color(self) -> None:
-        self.state = not self.state
 
     def main_loop(self):    
-        while True:
-            if self.state:
+        while self.run:
+            event = self.controller.get_btn_cross()
+
+            if event is None:
+                continue
+
+            if event.value == 1:
                 self.led.set_color("LEFT", "GREEN")
                 self.led.set_color("RIGHT", "GREEN")
             else:
@@ -39,30 +51,25 @@ class LedController(ComponentThreadClass):
     
 class Main:
     def __init__(self) -> None:
-        self.controller = DeviceEventStream("/dev/input/event4")
-
-        self.events = {
-            constants.R2_AXIS: self.on_r2_axis,
-            constants.CROSS: self.on_cross,
-        }
-
-        self.motor_controller = MotorController()
-        self.led_controller = LedController()
-
-    def on_r2_axis(self, event: Event) -> None:
-        self.motor_controller.set_speed(event.value)
-
-    def on_cross(self, event: Event) -> None:
-        if event.value == 1:
-            self.led_controller.set_led_color()
+        self.controller = DualshockInterface("/dev/input/event4")
+        self.motor_controller = MotorController(self.controller)
+        self.led_controller = LedController(self.controller)
 
     def start(self) -> None:
+        self.controller.start_listening()
         self.motor_controller.start_loop_thread()
         self.led_controller.start_loop_thread()
 
-        for event in self.controller:
-            if event.type in self.events:
-                self.events[event.type](event)
+        while True:
+            event = self.controller.get_btn_ps()
+
+            if event is None:
+                continue
+
+            if event.value == 1:
+                self.motor_controller.stop_loop_thread()
+                self.led_controller.stop_loop_thread()
+                break
 
 
 if __name__ == "__main__":
