@@ -75,7 +75,7 @@ class SoundController(ThreadedComponentClass):
         self.allah = SoundPlayer("./sounds/allah.wav")
         self.bomb = SoundPlayer("./sounds/bomb.wav")
         self.laugh = SoundPlayer("./sounds/laugh.wav")
-        self.song = SoundPlayer("./sounds/song.wav")
+        self.china = SoundPlayer("./sounds/china.wav")
 
         self.playing = False
 
@@ -83,7 +83,7 @@ class SoundController(ThreadedComponentClass):
         self.allah.stop()
         self.bomb.stop()
         self.laugh.stop()
-        self.song.stop()
+        self.china.stop()
 
     def main_loop(self):
         while self.run:
@@ -95,16 +95,20 @@ class SoundController(ThreadedComponentClass):
                 self.spkr.beep()
 
             if dpad_x is not None:
+                self.stop_playing()
+
                 if dpad_x.value == 1:
                     self.allah.play()
                 if dpad_x.value == -1:
                     self.bomb.play()
 
             if dpad_y is not None:
+                self.stop_playing()
+
                 if dpad_y.value == 1:
                     self.laugh.play()
                 if dpad_y.value == -1:
-                    self.song.play()
+                    self.china.play()
    
 
 class ArmController(ThreadedComponentClass):
@@ -146,7 +150,7 @@ class Main:
         self.led_controller = LedController(self.controller)
         self.motor_controller = MotorController(self.controller, self.led_controller)
         self.sound_controller = SoundController(self.controller)
-        self.arm_controller = ArmController(self.controller)
+        # self.arm_controller = ArmController(self.controller)
 
     def start(self) -> None:
         try:
@@ -155,7 +159,7 @@ class Main:
             self.motor_controller.start_loop_thread()
             self.led_controller.start_loop_thread()
             self.sound_controller.start_loop_thread()
-            self.arm_controller.start_loop_thread()
+            # self.arm_controller.start_loop_thread()
 
             self.led_controller.led.set_color("LEFT", "GREEN")
             self.led_controller.led.set_color("RIGHT", "GREEN")
