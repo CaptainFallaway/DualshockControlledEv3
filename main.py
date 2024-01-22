@@ -38,7 +38,6 @@ class StateController(ThreadedComponentClass):
                 self.led.set_color("RIGHT", "YELLOW")
             else:
                 self.led.all_off()
-                
 
 
 class MotorController(ThreadedComponentClass):
