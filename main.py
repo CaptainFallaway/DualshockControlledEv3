@@ -192,7 +192,7 @@ class Main:
         self.state_controller = StateController(self.controller)
         self.motor_controller = MotorController(self.controller, self.state_controller)
         self.sound_controller = SoundController(self.controller)
-        # self.arm_controller = ArmController(self.controller)
+        self.arm_controller = ArmController(self.controller)
 
     def start(self) -> None:
         try:
@@ -201,7 +201,7 @@ class Main:
             self.motor_controller.start_loop_thread()
             self.state_controller.start_loop_thread()
             self.sound_controller.start_loop_thread()
-            # self.arm_controller.start_loop_thread()
+            self.arm_controller.start_loop_thread()
 
             self.state_controller.led.all_off
 
