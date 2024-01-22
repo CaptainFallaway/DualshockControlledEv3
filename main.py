@@ -72,10 +72,12 @@ class SoundController(ThreadedComponentClass):
     def __init__(self, controller_class: DualshockInterface) -> None:
         super().__init__(controller_class)
 
+        self.spkr = Sound()
+
         self.allah = SoundPlayer("./sounds/allah.wav")
         self.bomb = SoundPlayer("./sounds/bomb.wav")
         self.laugh = SoundPlayer("./sounds/laugh.wav")
-        self.china = SoundPlayer("./sounds/china.wav")
+        self.bluetooth = SoundPlayer("./sounds/bluetooth.wav")
 
         self.playing = False
 
@@ -83,7 +85,35 @@ class SoundController(ThreadedComponentClass):
         self.allah.stop()
         self.bomb.stop()
         self.laugh.stop()
-        self.china.stop()
+        self.bluetooth.stop()
+
+    def play_allah(self):
+        if self.allah.playing:
+            self.stop_playing()
+            return
+        
+        self.allah.play()
+
+    def play_bomb(self):
+        if self.bomb.playing:
+            self.stop_playing()
+            return
+        
+        self.bomb.play()
+
+    def play_laugh(self):
+        if self.laugh.playing:
+            self.stop_playing()
+            return
+        
+        self.laugh.play()
+
+    def play_bluetooth(self):
+        if self.bluetooth.playing:
+            self.stop_playing()
+            return
+        
+        self.bluetooth.play()
 
     def main_loop(self):
         while self.run:
@@ -95,20 +125,16 @@ class SoundController(ThreadedComponentClass):
                 self.spkr.beep()
 
             if dpad_x is not None:
-                self.stop_playing()
-
                 if dpad_x.value == 1:
-                    self.allah.play()
+                    self.play_allah()
                 if dpad_x.value == -1:
-                    self.bomb.play()
+                    self.play_bomb()
 
             if dpad_y is not None:
-                self.stop_playing()
-
                 if dpad_y.value == 1:
-                    self.laugh.play()
+                    self.play_laugh()
                 if dpad_y.value == -1:
-                    self.china.play()
+                    self.play_bluetooth()
    
 
 class ArmController(ThreadedComponentClass):
