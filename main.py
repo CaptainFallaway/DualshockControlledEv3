@@ -1,4 +1,5 @@
 from time import sleep
+from helpers.player import SoundPlayer
 from helpers.component import ThreadedComponentClass
 from dualshock_controller import DualshockInterface, Event
 
@@ -71,17 +72,39 @@ class SoundController(ThreadedComponentClass):
     def __init__(self, controller_class: DualshockInterface) -> None:
         super().__init__(controller_class)
 
-        self.spkr = Sound()
+        self.allah = SoundPlayer("./sounds/allah.wav")
+        self.bomb = SoundPlayer("./sounds/bomb.wav")
+        self.laugh = SoundPlayer("./sounds/laugh.wav")
+        self.song = SoundPlayer("./sounds/song.wav")
+
+        self.playing = False
+
+    def stop_playing(self):
+        self.allah.stop()
+        self.bomb.stop()
+        self.laugh.stop()
+        self.song.stop()
 
     def main_loop(self):
         while self.run:
-            event = self.controller.get_btn_l3(True)
+            honk = self.controller.get_btn_l3(True)
+            dpad_x = self.controller.get_axis_dpad_x(True)
+            dpad_y = self.controller.get_axis_dpad_y(True)
 
-            if event is None:
-                continue
-
-            if event.value == 1:
+            if honk is not None and honk.value == 1:
                 self.spkr.beep()
+
+            if dpad_x is not None:
+                if dpad_x.value == 1:
+                    self.allah.play()
+                if dpad_x.value == -1:
+                    self.bomb.play()
+
+            if dpad_y is not None:
+                if dpad_y.value == 1:
+                    self.laugh.play()
+                if dpad_y.value == -1:
+                    self.song.play()
    
 
 class ArmController(ThreadedComponentClass):
