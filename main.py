@@ -1,4 +1,5 @@
 from time import sleep
+from helpers.player import SoundPlayer
 from helpers.component import ThreadedComponentClass
 from dualshock_controller import DualshockInterface, Event
 
@@ -95,17 +96,43 @@ class SoundController(ThreadedComponentClass):
     def __init__(self, controller_class: DualshockInterface) -> None:
         super().__init__(controller_class)
 
-        self.spkr = Sound()
+        self.allah = SoundPlayer("./sounds/allah.wav")
+        self.bomb = SoundPlayer("./sounds/bomb.wav")
+        self.laugh = SoundPlayer("./sounds/laugh.wav")
+        self.china = SoundPlayer("./sounds/china.wav")
+
+        self.playing = False
+
+    def stop_playing(self):
+        self.allah.stop()
+        self.bomb.stop()
+        self.laugh.stop()
+        self.china.stop()
 
     def main_loop(self):
         while self.run:
-            event = self.controller.get_btn_l3(True)
+            honk = self.controller.get_btn_l3(True)
+            dpad_x = self.controller.get_axis_dpad_x(True)
+            dpad_y = self.controller.get_axis_dpad_y(True)
 
-            if event is None:
-                continue
-
-            if event.value == 1:
+            if honk is not None and honk.value == 1:
                 self.spkr.beep()
+
+            if dpad_x is not None:
+                self.stop_playing()
+
+                if dpad_x.value == 1:
+                    self.allah.play()
+                if dpad_x.value == -1:
+                    self.bomb.play()
+
+            if dpad_y is not None:
+                self.stop_playing()
+
+                if dpad_y.value == 1:
+                    self.laugh.play()
+                if dpad_y.value == -1:
+                    self.china.play()
    
 
 class ArmController(ThreadedComponentClass):
@@ -140,7 +167,7 @@ class Main:
         self.state_controller = StateController(self.controller)
         self.motor_controller = MotorController(self.controller, self.state_controller)
         self.sound_controller = SoundController(self.controller)
-        self.arm_controller = ArmController(self.controller)
+        # self.arm_controller = ArmController(self.controller)
 
     def start(self) -> None:
         try:
@@ -149,7 +176,7 @@ class Main:
             self.motor_controller.start_loop_thread()
             self.state_controller.start_loop_thread()
             self.sound_controller.start_loop_thread()
-            self.arm_controller.start_loop_thread()
+            # self.arm_controller.start_loop_thread()
 
             self.state_controller.led.all_off
 
