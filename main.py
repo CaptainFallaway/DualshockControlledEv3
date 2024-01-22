@@ -19,14 +19,14 @@ class StateController(ThreadedComponentClass):
 
     def main_loop(self):    
         while self.run:
-            cross = self.controller.get_btn_cross(True)
-            triangle = self.controller.get_btn_triangle(True)
+            l1 = self.controller.get_btn_l1(True)
+            r1 = self.controller.get_btn_r1(True)
 
-            if cross is not None and cross.value == 1:
+            if l1 is not None and l1.value == 1:
                 self.manuvering_mode = not self.manuvering_mode
                 self.stick_mode = False
 
-            if triangle is not None and triangle.value == 1:
+            if r1 is not None and r1.value == 1:
                 self.stick_mode = not self.stick_mode
                 self.manuvering_mode = False
 
