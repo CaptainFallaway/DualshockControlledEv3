@@ -201,14 +201,19 @@ class Main:
         self.sound_controller = SoundController(self.controller)
         self.arm_controller = ArmController(self.controller)
 
+        self.running = [
+            self.state_controller,
+            self.motor_controller,
+            self.sound_controller,
+            self.arm_controller
+        ]
+
     def start(self) -> None:
         try:
             self.controller.start_listening()
 
-            self.motor_controller.start_loop_thread()
-            self.state_controller.start_loop_thread()
-            self.sound_controller.start_loop_thread()
-            self.arm_controller.start_loop_thread()
+            for component in self.running:
+                component.start_loop_thread()
 
             self.state_controller.led.all_off()
 
@@ -220,15 +225,19 @@ class Main:
 
                 if event.value == 1:
                     print("Stopping...")
-                    self.motor_controller.stop_loop_thread()
-                    self.state_controller.stop_loop_thread()
+
+                    for component in self.running:
+                        component.stop()
+
                     break
         except KeyboardInterrupt:
             while True:
                 try:
                     print("Stopping...")
-                    self.motor_controller.stop_loop_thread()
-                    self.state_controller.stop_loop_thread()
+                    
+                    for component in self.running:
+                        component.stop()
+
                     break
                 except KeyboardInterrupt:
                     continue
