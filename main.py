@@ -172,6 +172,13 @@ class ArmController(ThreadedComponentClass):
 
         while self.run:
             right_stick_y = self.controller.get_axis_right_stick_y()
+            r3 = self.controller.get_btn_r3()
+
+            if r3 is not None and r3.value == 1:
+                self.arm.on(SpeedPercent(-100))
+                continue
+            elif r3 is not None and r3.value == 0:
+                self.arm.off()
 
             if right_stick_y is None:
                 continue
@@ -203,7 +210,7 @@ class Main:
             self.sound_controller.start_loop_thread()
             self.arm_controller.start_loop_thread()
 
-            self.state_controller.led.all_off
+            self.state_controller.led.all_off()
 
             while True:
                 event = self.controller.get_btn_ps()
