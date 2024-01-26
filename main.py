@@ -188,8 +188,8 @@ class ArmController(ThreadedComponentClass):
             if throttle < 6.2 and throttle > -6.2:
                 self.arm.off()
                 continue
-
-            self.arm.on(SpeedDPS(throttle*10))
+            
+            self.arm.on(SpeedPercent(throttle / 2))
             
 
 class Main:
