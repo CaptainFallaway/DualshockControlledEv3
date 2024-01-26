@@ -99,8 +99,8 @@ class SoundController(ThreadedComponentClass):
 
         self.allah = SoundPlayer("./sounds/allah.wav")
         self.bomb = SoundPlayer("./sounds/bomb.wav")
-        self.laugh = SoundPlayer("./sounds/laugh.wav")
-        self.bluetooth = SoundPlayer("./sounds/bluetooth.wav")
+        self.laugh = SoundPlayer("./sounds/niger.wav")
+        self.bluetooth = SoundPlayer("./sounds/peter-niger.wav")
 
         self.playing = False
 
