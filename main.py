@@ -107,6 +107,15 @@ class SoundController(ThreadedComponentClass):
         for sound in self.sounds.values():
             sound.stop()
 
+    def play(self, sound_name: str) -> None:
+        sound = self.sounds[sound_name]
+
+        if not sound.playing:
+            self.stop_playing()
+            sound.play()
+        else:
+            sound.stop()
+
     def main_loop(self):
         while self.run:
             honk = self.controller.get_btn_l3(True)
@@ -117,16 +126,16 @@ class SoundController(ThreadedComponentClass):
                 self.spkr.beep()
 
             if dpad_x is not None:
-                if dpad_x.value == 1:
-                    self.play_allah()
-                if dpad_x.value == -1:
-                    self.play_bomb()
+                if dpad_x.value == 1:  # Right
+                    self.play("peter-laugh")
+                if dpad_x.value == -1:  # Left
+                    self.play("explosion")
 
             if dpad_y is not None:
-                if dpad_y.value == 1:
-                    self.play_laugh()
-                if dpad_y.value == -1:
-                    self.play_bluetooth()
+                if dpad_y.value == 1:  # Bottom
+                    self.play("move")
+                if dpad_y.value == -1:  # Top
+                    self.play("bruh")
    
 
 class ArmController(ThreadedComponentClass):
